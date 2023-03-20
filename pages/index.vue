@@ -2,8 +2,12 @@
   <div class="app">
     <main>
       <div>
-        <input type="text" />
-      </div>
+       <!-- <SearchInput 
+       :search-keyword="searchKeyword"
+       @input="updateSearchKeyword" /> -->
+        <SearchInput v-model="searchKeyword" @search="searchProduct"/>
+      </div> 
+
       <ul>
         <li
           v-for="product in products"
@@ -20,14 +24,20 @@
           <span>{{ product.price }}</span>
         </li>
       </ul>
+      <div class="cart-wrapper">
+        <button class="btn" @click="moveToCartPage">장바구니 바로가기</button>
+      </div>
     </main>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import SearchInput from '@/components/SearchInput.vue'
+import { fetchProductByKeyword } from '~/api'
 
 export default {
+  components: { SearchInput },
   async asyncData() {
     const response = await axios.get('http://localhost:3000/products')
     console.log(response)
@@ -38,10 +48,33 @@ export default {
     return { products }
   },
 
+  data() {
+    return {
+      searchKeyword: '',
+    }
+  },
+
   methods: {
     moveToDetailPage(id) {
       console.log(id)
       this.$router.push(`detail/${id}`)
+    },
+
+    // updateSearchKeyword(keyword) {
+    //   this.searchKeyword = keyword;
+    // },
+
+    async searchProduct() {
+      const response = await fetchProductByKeyword(this.searchKeyword);
+      console.log(response.data)
+      this.products = response.data.map((item) => ({
+      ...item,
+      imageUrl: `${item.imageUrl}?random=${Math.random()}`,
+    }))
+    },
+
+    moveToCartPage() {
+      this.$router.push('/cart')
     },
   },
   // data() {
@@ -51,6 +84,7 @@ export default {
   // },
 
   // async created() {},
+
 }
 </script>
 
@@ -73,5 +107,17 @@ export default {
 }
 .app {
   position: relative;
+}
+.cart-wrapper {
+  position: sticky;
+  float: right;
+  bottom: 50px;
+  right: 50px;
+}
+.cart-wrapper .btn {
+  display: inline-block;
+  height: 40px;
+  font-size: 1rem;
+  font-weight: 500;
 }
 </style>
